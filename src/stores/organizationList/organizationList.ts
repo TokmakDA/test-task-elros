@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import type { FilterParams, Organization, OrganizationsState } from './types'
-import { OrganizationSevice } from './organizationService'
+import { OrganizationSevice } from './organizationListService'
 
-export const organizationsStore = defineStore('organizations', {
+export const organizationListStore = defineStore('organizations', {
   state: (): OrganizationsState => ({
     success: false,
     count: 6,

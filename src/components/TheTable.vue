@@ -33,15 +33,23 @@
     </template>
 
     <template v-slot:item="{ item }">
-      <tr @click.stop="console.log(item)">
+      <tr
+        @click.stop="
+          $router.push({
+            name: `organization`,
+            params: { id: item.id },
+            query: { edit: 'false' }
+          })
+        "
+      >
         <td class="v-data-table__td v-data-table-column--align-start">
           {{ item.id }}
         </td>
         <td class="v-data-table__td v-data-table-column--align-start">
           {{ item.name }}
         </td>
-        <td class="v-data-table__td v-data-table-column--align-end">
-          {{ item.is_active }}
+        <td class="v-data-table__td v-data-table-column--align-start">
+          <table-chip :isActive="item.is_active"></table-chip>
         </td>
         <td class="v-data-table__td v-data-table-column--align-end">
           <table-action-buttons
@@ -76,11 +84,13 @@ import { defineComponent } from 'vue'
 import type { VDataTableServer } from 'vuetify/components'
 import TheDialog from './TheDialog.vue'
 import TableActionButtons from './TableActionButtons.vue'
+import TableChip from './TableChip.vue'
+
 import {
-  organizationsStore as useOrganizationsStore,
+  organizationListStore as useorganizationListStore,
   type Organization,
   type FilterParams
-} from '@/stores/organizations'
+} from '@/stores/organizationList'
 
 export default defineComponent({
   data() {
@@ -92,7 +102,7 @@ export default defineComponent({
           key: 'id'
         },
         { title: 'Наименование', key: 'name', align: 'start' },
-        { title: 'Активен', key: 'is_active', align: 'end' },
+        { title: 'Активен', key: 'is_active', align: 'start' },
         { title: 'Действия', key: 'actions', align: 'end', sortable: false }
       ] as VDataTableServer['headers'],
       serverItems: [] as Organization[],
@@ -130,15 +140,15 @@ export default defineComponent({
   },
 
   computed: {
-    organizationsStore() {
-      return useOrganizationsStore()
+    organizationListStore() {
+      return useorganizationListStore()
     }
   },
 
-  components: { TableActionButtons, TheDialog },
+  components: { TableActionButtons, TheDialog, TableChip },
   methods: {
     getData() {
-      const { count, results, isLoading } = this.organizationsStore.getData
+      const { count, results, isLoading } = this.organizationListStore.getData
       this.serverItems = results
       this.loading = isLoading
       this.totalItems = count
@@ -178,7 +188,7 @@ export default defineComponent({
 
       this.loading = true
 
-      await this.organizationsStore.fetchList(params)
+      await this.organizationListStore.fetchList(params)
       this.getData()
       this.loading = false
     },
@@ -187,7 +197,8 @@ export default defineComponent({
       console.log('editItem', item)
       if (item.id) {
         this.$router.push({
-          path: `./organization/${item.id}`,
+          name: `organization`,
+          params: { id: item.id },
           query: { edit: 'true' }
         })
       }
