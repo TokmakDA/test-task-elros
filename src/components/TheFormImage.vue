@@ -39,22 +39,8 @@
         </v-sheet>
       </v-form>
     </v-sheet>
-    <v-sheet
-      :max-width="900"
-      width="fill-content"
-      class="ma-auto"
-      v-if="newImage"
-    >
-      <v-img
-        aspect-ratio="16/9"
-        :max-width="900"
-        width="fill-content"
-        :alt="newImage.title || 'нет названия'"
-        cover
-        :src="newImage.image"
-        :lazy-src="newImage.thumbnail"
-      ></v-img>
-    </v-sheet>
+
+    <the-image :image="newImage" v-if="newImage"></the-image>
   </v-sheet>
 </template>
 
@@ -62,6 +48,8 @@
 import { defineComponent } from 'vue'
 import { useImagesStore } from '@/stores'
 import { mapStores } from 'pinia'
+import TheImage from '@/components/TheImage.vue'
+
 export default defineComponent({
   setup() {
     return {}
@@ -104,12 +92,16 @@ export default defineComponent({
       }
     },
 
-    async cleanFormAndImage() {
+    async cleanFormAndDeleteImahe() {
       const { id } = this.newImage
       this.ressetForm()
       if (id) {
         await this.imagesStore.fetchDeleteImage(id)
       }
+    },
+    async cleanFormAndImage() {
+      this.ressetForm()
+      this.imagesStore.$reset()
     },
 
     async submit() {
@@ -139,7 +131,8 @@ export default defineComponent({
     disabledВownload() {
       return this.newImage.id ? true : !this.isValid
     }
-  }
+  },
+  components: { TheImage }
 })
 </script>
 

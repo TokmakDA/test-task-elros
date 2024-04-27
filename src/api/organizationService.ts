@@ -32,7 +32,7 @@ export class OrganizationSevice {
   }
   public static async patchOrganization(
     id: string | number,
-    data: {}
+    data: OrganizationRequest
   ): Promise<AxiosResponse<Organization>> {
     return await AxiosApi.patch<Organization>(
       `${ApiEndpoints.organizations}/${id}/`,

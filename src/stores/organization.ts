@@ -2,7 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { OrganizationSevice } from '@/api/organizationService'
-import type { Organization } from '@/@types/organization'
+import type { Organization, OrganizationRequest } from '@/@types/organization'
 
 export const useOrganizationStore = defineStore('organization', () => {
   const router = useRouter()
@@ -43,7 +43,10 @@ export const useOrganizationStore = defineStore('organization', () => {
     loadTime.value = Date.now()
   }
 
-  async function fetchUpdateItem(id: number | string, data: {}): Promise<void> {
+  async function fetchUpdateItem(
+    id: number | string,
+    data: OrganizationRequest
+  ): Promise<void> {
     console.log(data)
     isLoading.value = true
     try {

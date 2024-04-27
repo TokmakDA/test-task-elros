@@ -27,8 +27,6 @@ export const useImagesStore = defineStore('images', () => {
     isLoading.value = true
     try {
       await imagesService.fetchDelete(id)
-      // сбросить
-
       newImage.value = {} as Image
     } catch (error) {
       console.error(error)
@@ -37,12 +35,18 @@ export const useImagesStore = defineStore('images', () => {
     }
   }
 
+  const $reset = () => {
+    newImage.value = {} as Image
+    isLoading.value = false
+  }
+
   return {
     newImage,
     isLoading,
     loadTime,
     fetchAddImage,
-    fetchDeleteImage
+    fetchDeleteImage,
+    $reset
   }
 })
 

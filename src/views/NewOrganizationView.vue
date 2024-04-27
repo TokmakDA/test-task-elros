@@ -51,7 +51,7 @@
           ></v-textarea>
 
           <v-input
-            v-if="addInputPhoto"
+            v-if="addInputImage"
             v-model="photoInput"
             success
             :rules="[rules.required]"
@@ -62,18 +62,18 @@
           </v-input>
           <v-sheet>
             <v-btn
-              v-if="!addInputPhoto"
+              v-if="!addInputImage"
               color="green"
               variant="tonal"
               type="button"
-              @click="addInputPhoto = !addInputPhoto"
-              >Добавить фото?</v-btn
+              @click="addInputImage = !addInputImage"
+              >Добавить изображение</v-btn
             >
           </v-sheet>
 
-          <!--  Форма добавления фото  -->
+          <!--  Форма добавления изображения  -->
           <the-form-image
-            v-if="addInputPhoto"
+            v-if="addInputImage"
             ref="childComponent"
             @submit-form-image="addPhoto"
           ></the-form-image>
@@ -108,7 +108,9 @@
 
 <script lang="ts">
 import type { Image } from '@/@types/images'
+import type { OrganizationRequest } from '@/@types/organization'
 import TheFormImage from '@/components/TheFormImage.vue'
+import { useImagesStore } from '@/stores'
 import { useOrganizationStore } from '@/stores/organization'
 import { mapStores } from 'pinia'
 
@@ -116,17 +118,12 @@ export default {
   data() {
     return {
       photoInput: null as Image | null,
-      addInputPhoto: false,
+      addInputImage: false,
       itemData: {
         name: '',
         short_name: '',
         description: ''
-      } as {
-        name: string
-        short_name: string
-        description: string
-        image?: string | number
-      },
+      } as OrganizationRequest,
 
       isValid: false,
       isLoading: false,
@@ -144,26 +141,26 @@ export default {
         this.itemData = { ...this.itemData, image: this.photoInput.id }
       }
       await this.organizationStore.fetchNewItem(this.itemData)
+      this.imagesStore.$reset()
     },
 
     cancelAddingPhoto() {
       const childComponent = this.$refs.childComponent as {
-        cleanFormAndImage: () => void
+        cleanFormAndDeleteImahe: () => void
       }
-      childComponent.cleanFormAndImage()
+      childComponent.cleanFormAndDeleteImahe()
 
       this.photoInput = null
-      this.addInputPhoto = false
+      this.addInputImage = false
     },
 
     addPhoto(item: Image) {
-      console.log(item)
       this.photoInput = item
     }
   },
   computed: {
     // получаем доступ к стору
-    ...mapStores(useOrganizationStore)
+    ...mapStores(useOrganizationStore, useImagesStore)
   },
   components: {
     TheFormImage

@@ -11,8 +11,9 @@ export interface OrganizationsResponse {
 export interface OrganizationRequest {
   name: string
   short_name: string
-  description: string | null
-  is_active: true // Обязятельно True можно сделать булевое Boolean(True/False)
+  description: string
+  is_active?: true // Обязятельно True можно сделать булевое Boolean(True/False)
+  image?: string | number | null
 }
 
 export interface FilterParams {

@@ -59,6 +59,47 @@
             variant="filled"
             auto-grow
           ></v-textarea>
+
+          <the-image :image="itemData.image" v-if="itemData.image"></the-image>
+          <v-sheet v-if="!readOnlyForms">
+            <v-input
+              v-if="addInputImage"
+              v-model="photoInput"
+              success
+              :rules="[rules.required]"
+              append-icon="mdi-close"
+              @click:append="cancelAddingPhoto"
+            >
+              {{
+                itemData.image?.id
+                  ? 'Заменить изображение'
+                  : 'Добавление изображения'
+              }}
+            </v-input>
+            <v-sheet>
+              <v-btn
+                v-if="!addInputImage"
+                color="green"
+                variant="tonal"
+                type="button"
+                @click="addInputImage = !addInputImage"
+              >
+                {{
+                  itemData.image?.id
+                    ? 'Заменить изображение'
+                    : 'Добавление изображения'
+                }}</v-btn
+              >
+            </v-sheet>
+
+            <!--  Форма добавления я  -->
+            <the-form-image
+              v-if="addInputImage"
+              ref="childComponent"
+              @submit-form-image="addPhoto"
+            ></the-form-image>
+          </v-sheet>
+
           <v-sheet v-if="!readOnlyForms">
             <v-divider class="py-4"></v-divider>
             <v-sheet class="d-flex ga-4 justify-end">
@@ -88,14 +129,22 @@
 </template>
 
 <script lang="ts">
+import type { Image } from '@/@types/images'
 import { useOrganizationStore } from '@/stores/organization'
 import { mapStores } from 'pinia'
+import TheFormImage from '@/components/TheFormImage.vue'
+import TheImage from '@/components/TheImage.vue'
+import type { OrganizationRequest } from '@/@types/organization'
+import { useImagesStore } from '@/stores'
 
 export default {
   props: ['id', 'query'],
 
   data() {
     return {
+      photoInput: null as Image | null,
+      addInputImage: false,
+
       readOnlyForms: true,
       isValid: false,
       isLoading: false,
@@ -113,9 +162,19 @@ export default {
     async submit() {
       try {
         const { name, short_name, description, id } = this.itemData
-        const dataItemForm = { name, short_name, description }
+        const dataItemForm = {
+          name,
+          short_name,
+          description
+        } as OrganizationRequest
+
+        if (this.photoInput) {
+          dataItemForm.image = this.photoInput.id
+        }
         if (id) {
           await this.organizationStore.fetchUpdateItem(id, dataItemForm)
+          this.imagesStore.$reset()
+          this.cancelAddingPhoto()
         }
 
         this.readOnlyForms = true
@@ -156,13 +215,28 @@ export default {
       } else {
         this.redirectToPreviousPage()
       }
+    },
+
+    // TODO Вынести в миксины
+    cancelAddingPhoto() {
+      const childComponent = this.$refs.childComponent as {
+        cleanFormAndImage: () => void
+      }
+      childComponent.cleanFormAndImage()
+
+      this.photoInput = null
+      this.addInputImage = false
+    },
+    addPhoto(item: Image) {
+      this.photoInput = item
     }
   },
-  components: {},
+
+  components: { TheFormImage, TheImage },
 
   computed: {
     // получаем доступ к стору
-    ...mapStores(useOrganizationStore),
+    ...mapStores(useOrganizationStore, useImagesStore),
 
     itemData() {
       return this.organizationStore.item
@@ -174,6 +248,7 @@ export default {
     this.checkReadOnlyForms()
 
     await this.getInitialDate()
+    console.log(this.itemData)
   }
 }
 </script>
