@@ -1,7 +1,8 @@
 // Utilities
 import { createPinia } from 'pinia'
-import { organizationListStore } from './organizationList'
+import { useOrganizationListStore } from './organizationList'
+import { useOrganizationStore } from './organization'
 
 export default createPinia()
 
-export { organizationListStore }
+export { useOrganizationListStore, useOrganizationStore }

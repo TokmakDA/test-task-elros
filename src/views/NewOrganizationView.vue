@@ -5,17 +5,8 @@
         <v-icon>mdi-arrow-left</v-icon>
       </v-app-bar-nav-icon>
       <v-app-bar-title class="text-h6 font-weight-regular aling-center">
-        Место проведения детально
+        Добавить новую организацию
       </v-app-bar-title>
-      <v-btn
-        @click="readOnlyForms = !readOnlyForms"
-        variant="flat"
-        :color="!readOnlyForms ? 'gray' : 'blue'"
-        class="rounded-lg"
-        icon
-      >
-        <v-icon>mdi-pencil</v-icon>
-      </v-btn>
     </v-app-bar>
 
     <v-main style="min-height: 300px" class="ma-3">
@@ -24,7 +15,6 @@
           ref="form"
           v-model="isValid"
           class="pa-4 pt-6"
-          :readonly="readOnlyForms"
           @submit.prevent="submit"
         >
           <v-text-field
@@ -59,13 +49,13 @@
             variant="filled"
             auto-grow
           ></v-textarea>
-          <v-sheet v-if="!readOnlyForms">
+          <v-sheet>
             <v-divider class="py-4"></v-divider>
             <v-sheet class="d-flex ga-4 justify-end">
               <v-btn
                 variant="tonal"
                 color="blue"
-                @click="$router.go(-1)"
+                @click="$router.back"
                 :loading="isLoading"
               >
                 Назад
@@ -77,7 +67,7 @@
                 :loading="isLoading"
                 type="submit"
               >
-                Сохранить
+                Добавить
               </v-btn>
             </v-sheet>
           </v-sheet>
@@ -92,15 +82,15 @@ import { useOrganizationStore } from '@/stores/organization'
 import { mapStores } from 'pinia'
 
 export default {
-  props: ['id', 'query'],
-
   data() {
     return {
-      readOnlyForms: true,
+      itemData: {
+        name: '',
+        short_name: '',
+        description: ''
+      },
       isValid: false,
       isLoading: false,
-      photo: undefined,
-      photoName: undefined,
       rules: {
         length: (len: number) => (v: string) =>
           (v || '').length >= len ||
@@ -111,69 +101,12 @@ export default {
   },
   methods: {
     async submit() {
-      try {
-        const { name, short_name, description, id } = this.itemData
-        const dataItemForm = { name, short_name, description }
-        if (id) {
-          await this.organizationStore.fetchUpdateItem(id, dataItemForm)
-        }
-
-        this.readOnlyForms = true
-      } catch (err) {
-        console.log(err)
-      }
-    },
-
-    redirectToPreviousPage() {
-      this.$router.back()
-    },
-
-    checkReadOnlyForms() {
-      const { edit } = this.query
-      if (edit === 'true') {
-        this.readOnlyForms = false
-      } else {
-        this.readOnlyForms = true
-      }
-    },
-
-    async getInitialDate() {
-      console.group('getInitialDate')
-      const { id } = this.id
-      const timeNow = Date.now()
-      const item = this.organizationStore.item
-      const loadTime = this.organizationStore.loadTime
-      console.log('time.cache', timeNow - loadTime)
-      // лимит кеша данныех, чтобы не делать лишние загрузки с сервера
-      const cacheLimitTime = timeNow - loadTime > 60000
-      console.log('cacheLimitTime', cacheLimitTime)
-      console.log('item', item)
-
-      if (id) {
-        // сравниваем ID неявно. т.к. разные типы
-        if (id != item.id || cacheLimitTime)
-          await this.organizationStore.fetchItem(id)
-      } else {
-        this.redirectToPreviousPage()
-      }
+      await this.organizationStore.fetchNewItem(this.itemData)
     }
   },
-  components: {},
-
   computed: {
     // получаем доступ к стору
-    ...mapStores(useOrganizationStore),
-
-    itemData() {
-      return this.organizationStore.item
-    }
-  },
-
-  async mounted() {
-    // Проверяем режим редактирования
-    this.checkReadOnlyForms()
-
-    await this.getInitialDate()
+    ...mapStores(useOrganizationStore)
   }
 }
 </script>

@@ -1,3 +1,5 @@
+import type { Image } from './images'
+
 export interface OrganizationsResponse {
   success: boolean
   count: number
@@ -21,26 +23,27 @@ export interface FilterParams {
 
 export type OrganizationsState = OrganizationsResponse & {
   isLoading: boolean
+  counterLoad: number
 }
 
 export type Organization = {
   id: number | string
-  uuid: string
-  name: string
-  short_name: string
-  description: string | null
-  maximum_seats: string | null
-  parent: string | null
-  image: OrganizationImage | null
-  is_seller: boolean
-  object_type: string
-  addresses: [] | unknown
-  is_active: boolean
-  payment_info: [] | unknown
-  work_schedule: WorkDay[]
-  children: [] | unknown
-  work_mode: string
-  gallery: null | unknown
+  uuid?: string
+  name?: string
+  short_name?: string
+  description?: string | null
+  maximum_seats?: string | null
+  parent?: string | null
+  image?: Image | null
+  is_seller?: boolean
+  object_type?: string
+  addresses?: [] | unknown
+  is_active?: boolean
+  payment_info?: [] | unknown
+  work_schedule?: WorkDay[]
+  children?: [] | unknown
+  work_mode?: string
+  gallery?: null | unknown
 }
 
 export interface WorkDay {
@@ -52,13 +55,4 @@ export interface WorkDay {
   break_start_time: string
   break_end_time: string
   is_day_off: boolean
-}
-
-export interface OrganizationImage {
-  id: string | number
-  image: string
-  thumbnail: string
-  created: string
-  modified: string
-  title: string | null
 }

@@ -3,7 +3,7 @@
     <v-app-bar color="grey-lighten-3" title="Список Огранизаций">
       <v-btn
         prepend-icon="mdi-plus"
-        @click="console.log('CLik')"
+        @click="$router.replace({ name: 'new' })"
         variant="flat"
         color="green"
         class="rounded-lg"
@@ -20,10 +20,4 @@
 
 <script lang="ts" setup>
 import TheTable from '@/components/TheTable.vue'
-
-// export default {
-//   components: {
-//
-//   }
-// }
 </script>

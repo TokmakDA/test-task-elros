@@ -1,20 +1,16 @@
 <template>
   <v-data-table-server
-    class=""
     v-model:items-per-page="itemsPerPage"
+    v-model:page="page"
+    v-model:sort-by="sortBy"
     :headers="headers"
     :items="serverItems"
     :items-length="totalItems"
     :loading="loading"
     :items-per-page-options="itemsPerPageOptions"
-    @update:options="loadItems"
     hover
     showCurrentPage
-    expandOnClick
-    select-strategy="single"
-    fixedFooter
-    fixedHeader
-    @click:row.stop="onClickRow"
+    @update:options="loadItems"
   >
     <template v-slot:loading>
       <v-skeleton-loader
@@ -23,6 +19,7 @@
     </template>
 
     <template v-slot:top>
+      <!-- Кастомный компонент -->
       <the-dialog
         v-model="dialogDelete"
         title="Подтвердить удаление?"
@@ -33,15 +30,7 @@
     </template>
 
     <template v-slot:item="{ item }">
-      <tr
-        @click.stop="
-          $router.push({
-            name: `organization`,
-            params: { id: item.id },
-            query: { edit: 'false' }
-          })
-        "
-      >
+      <tr @click.stop="() => openItem(item, false)">
         <td class="v-data-table__td v-data-table-column--align-start">
           {{ item.id }}
         </td>
@@ -53,7 +42,7 @@
         </td>
         <td class="v-data-table__td v-data-table-column--align-end">
           <table-action-buttons
-            @edit-item="editItem"
+            @edit-item="openItem"
             @delete-item="deleteItem"
             :item="item"
           ></table-action-buttons>
@@ -80,21 +69,35 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
 import type { VDataTableServer } from 'vuetify/components'
 import TheDialog from './TheDialog.vue'
 import TableActionButtons from './TableActionButtons.vue'
 import TableChip from './TableChip.vue'
 
-import {
-  organizationListStore as useorganizationListStore,
-  type Organization,
-  type FilterParams
-} from '@/stores/organizationList'
+import { useOrganizationListStore } from '@/stores'
+import { useOrganizationStore } from '@/stores/organization'
+import type { Organization, FilterParams } from '@/@types/organization'
+import { OrganizationSevice } from '@/api/organizationService'
 
-export default defineComponent({
+export default {
   data() {
     return {
+      firtsLoad: true,
+      count: 0,
+      page: 1,
+      itemsPerPage: 5,
+      sortBy: [] as { key: string; order?: boolean | 'asc' | 'desc' }[],
+      loading: true,
+      totalItems: 0,
+      deleteItemId: 0,
+      itemsPerPageOptions: [
+        { value: 1, title: '1' },
+        { value: 5, title: '5' },
+        { value: 10, title: '10' },
+        { value: 25, title: '25' },
+        { value: 50, title: '50' },
+        { value: -1, title: 'Все' }
+      ],
       headers: [
         {
           title: 'ID',
@@ -106,34 +109,12 @@ export default defineComponent({
         { title: 'Действия', key: 'actions', align: 'end', sortable: false }
       ] as VDataTableServer['headers'],
       serverItems: [] as Organization[],
-      itemsPerPage: 5,
-      loading: true,
-      totalItems: 0,
-      itemsPerPageOptions: [
-        { value: 1, title: '1' },
-        { value: 5, title: '5' },
-        { value: 10, title: '10' },
-        { value: 25, title: '25' },
-        { value: 50, title: '50' },
-        { value: -1, title: 'Все' }
-      ],
 
-      dialog: false,
-      dialogDelete: false,
-      currentOrganization: {} as Organization,
-      defaultOrganization: {
-        name: '',
-        short_name: '',
-        description: '',
-        is_active: true
-      }
+      dialogDelete: false
     }
   },
 
   watch: {
-    dialog(val) {
-      val || this.close()
-    },
     dialogDelete(val) {
       val || this.closeDelete()
     }
@@ -141,17 +122,52 @@ export default defineComponent({
 
   computed: {
     organizationListStore() {
-      return useorganizationListStore()
+      return useOrganizationListStore()
+    },
+
+    organisationStore() {
+      return useOrganizationStore()
     }
   },
 
   components: { TableActionButtons, TheDialog, TableChip },
+
   methods: {
     getData() {
       const { count, results, isLoading } = this.organizationListStore.getData
       this.serverItems = results
       this.loading = isLoading
       this.totalItems = count
+    },
+
+    getQueryParams() {
+      const { page = 1, page_size = 5, ordering } = this.$route.query
+
+      this.page = Number(page)
+      this.itemsPerPage = Number(page_size)
+
+      const sort = ordering?.toString()
+      if (sort) {
+        if (sort.charAt(0) === '-') {
+          this.sortBy = [{ key: sort.substring(1), order: 'asc' }]
+        } else {
+          this.sortBy = [{ key: sort, order: 'desc' }]
+        }
+      } else {
+        this.sortBy = []
+      }
+    },
+
+    updateQueryParams(params: FilterParams) {
+      this.$router.push({
+        path: this.$route.path,
+        query: {
+          ...this.$route.query,
+          page: params.page?.toString(),
+          page_size: params.page_size?.toString(),
+          ordering: params.ordering
+        }
+      })
     },
 
     async loadItems({
@@ -161,16 +177,13 @@ export default defineComponent({
     }: {
       page: number
       itemsPerPage: number
-      sortBy: { key: string; order: string }[]
+      sortBy: { key: string; order?: boolean | 'asc' | 'desc' }[]
     }) {
-      let params: FilterParams = {}
+      this.loading = true
 
-      if (itemsPerPage) {
-        params.page_size = itemsPerPage
-      }
-
-      if (page && page != 1) {
-        params.page = page
+      const params: FilterParams = {
+        page: page || this.page,
+        page_size: itemsPerPage || this.itemsPerPage
       }
 
       if (sortBy?.length) {
@@ -186,62 +199,47 @@ export default defineComponent({
         params.ordering = prev + sortBy[0].key
       }
 
-      this.loading = true
-
       await this.organizationListStore.fetchList(params)
       this.getData()
       this.loading = false
+
+      this.updateQueryParams(params)
     },
 
-    editItem(item: Organization) {
-      console.log('editItem', item)
+    openItem(item: Organization, isEdit = true) {
+      this.organisationStore.setItem(item)
+
       if (item.id) {
         this.$router.push({
           name: `organization`,
           params: { id: item.id },
-          query: { edit: 'true' }
+          query: { edit: `${isEdit}` }
         })
       }
     },
 
     deleteItem(item: Organization) {
-      console.log('deleteItem', item.id)
+      this.deleteItemId = item.id
       this.dialogDelete = true
     },
 
-    deleteItemConfirm() {
-      console.log('deleteItemConfirm')
-      this.closeDelete()
-    },
+    async deleteItemConfirm() {
+      await OrganizationSevice.fetchDelete(this.deleteItemId)
 
-    close() {
-      // this.dialog = false
-      // this.$nextTick(() => {
-      //   this.editedItem = Object.assign({}, this.defaultItem)
-      //   this.editedIndex = -1
-      // })
+      this.closeDelete()
+
+      await this.loadItems({
+        page: this.page,
+        itemsPerPage: this.itemsPerPage,
+        sortBy: this.sortBy
+      })
     },
 
     closeDelete() {
-      // this.dialogDelete = false
-      // this.$nextTick(() => {
-      //   this.editedItem = Object.assign({}, this.defaultItem)
-      //   this.editedIndex = -1
-      // })
-    },
-
-    save() {
-      // if (this.editedIndex > -1) {
-      //   Object.assign(this.desserts[this.editedIndex], this.editedItem)
-      // } else {
-      //   this.desserts.push(this.editedItem)
-      // }
-      // this.close()
-    },
-    onClickRow(item: Organization) {
-      console.log(item)
+      this.dialogDelete = false
+      this.deleteItemId = 0
     }
   }
-})
+}
 </script>
 <style scoped></style>

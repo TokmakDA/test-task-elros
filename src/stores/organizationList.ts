@@ -1,15 +1,20 @@
 import { defineStore } from 'pinia'
-import type { FilterParams, Organization, OrganizationsState } from './types'
-import { OrganizationSevice } from './organizationListService'
+import type {
+  FilterParams,
+  Organization,
+  OrganizationsState
+} from '../@types/organization'
+import { OrganizationSevice } from '../api/organizationService'
 
-export const organizationListStore = defineStore('organizations', {
+export const useOrganizationListStore = defineStore('organizations', {
   state: (): OrganizationsState => ({
     success: false,
-    count: 6,
+    count: 0,
     next: null,
     previous: null,
     results: [],
-    isLoading: false
+    isLoading: false,
+    counterLoad: 0
   }),
   getters: {
     getData: (state) => state,
@@ -20,15 +25,19 @@ export const organizationListStore = defineStore('organizations', {
   },
   actions: {
     async fetchList(params: FilterParams): Promise<void> {
+      this.$state.counterLoad++
+      // console.group('fetchList')
+      // console.log('fetchList => counterLoad', this.$state.counterLoad)
       this.$state.isLoading = true
       try {
-        const res = await OrganizationSevice.fetchList(params)
+        const res = await OrganizationSevice.getList(params)
         // console.log(res)
         this.$state = res.data
       } catch (error) {
         console.log(error)
       } finally {
         this.$state.isLoading = false
+        // console.groupEnd()
       }
     }
   }
