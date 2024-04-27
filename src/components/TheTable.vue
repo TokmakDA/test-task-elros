@@ -78,6 +78,7 @@ import { useOrganizationListStore } from '@/stores'
 import { useOrganizationStore } from '@/stores/organization'
 import type { Organization, FilterParams } from '@/@types/organization'
 import { OrganizationSevice } from '@/api/organizationService'
+import { mapStores } from 'pinia'
 
 export default {
   data() {
@@ -121,13 +122,7 @@ export default {
   },
 
   computed: {
-    organizationListStore() {
-      return useOrganizationListStore()
-    },
-
-    organisationStore() {
-      return useOrganizationStore()
-    }
+    ...mapStores(useOrganizationListStore, useOrganizationStore)
   },
 
   components: { TableActionButtons, TheDialog, TableChip },
@@ -207,7 +202,7 @@ export default {
     },
 
     openItem(item: Organization, isEdit = true) {
-      this.organisationStore.setItem(item)
+      this.organizationStore.setItem(item)
 
       if (item.id) {
         this.$router.push({
@@ -239,6 +234,9 @@ export default {
       this.dialogDelete = false
       this.deleteItemId = 0
     }
+  },
+  beforeMount() {
+    this.getQueryParams()
   }
 }
 </script>

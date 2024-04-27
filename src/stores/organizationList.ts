@@ -6,7 +6,7 @@ import type {
 } from '../@types/organization'
 import { OrganizationSevice } from '../api/organizationService'
 
-export const useOrganizationListStore = defineStore('organizations', {
+export const useOrganizationListStore = defineStore('organizationList', {
   state: (): OrganizationsState => ({
     success: false,
     count: 0,
