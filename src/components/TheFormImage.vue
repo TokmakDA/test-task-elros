@@ -1,106 +1,143 @@
 <template>
   <v-sheet>
     <v-sheet>
-      <v-form @submit.prevent="submit">
-        <v-file-input
-          :rules="rules.photo"
-          accept="image/png, image/jpeg, image/bmp"
-          label="Изображение"
-          placeholder="Загрузить файл изображения"
-          prepend-icon="mdi-camera"
-          v-model="formInputs.file"
-        ></v-file-input>
-        <v-text-field
-          label="Название Изображения"
-          :rules="[rules.length(3)]"
-          v-model="formInputs.title"
-          maxLength="50"
-          counter="50"
-        ></v-text-field>
+      <v-form @submit.prevent="submit" v-model="isValid" ref="formImage">
+        <v-sheet v-if="!newImage.id">
+          <v-file-input
+            :rules="[rules.photo, rules.required]"
+            accept="image/png, image/jpeg, image/bmp"
+            label="Изображение"
+            placeholder="Загрузить файл изображения"
+            prepend-icon="mdi-camera"
+            v-model="formInputs.image"
+          ></v-file-input>
+          <v-text-field
+            ref="inputTitle"
+            label="Название Изображения"
+            :rules="[rules.length(3)]"
+            v-model="formInputs.title"
+            maxLength="50"
+            counter="50"
+          ></v-text-field>
+        </v-sheet>
+        <v-sheet class="d-flex justify-space-between">
+          <v-btn
+            color="red-lighten-5"
+            append-icon="mdi-close"
+            :loading="isLoading"
+            @click="cleanFormAndImage"
+          >
+            Очистить
+          </v-btn>
+          <v-btn
+            append-icon="mdi-upload"
+            type="submit"
+            :disabled="disabledВownload"
+            :loading="isLoading"
+            >{{ newImage.id ? 'Загружено' : 'Загрузить' }}</v-btn
+          >
+        </v-sheet>
       </v-form>
     </v-sheet>
-    <!-- <v-sheet
+    <v-sheet
       :max-width="900"
       width="fill-content"
       class="ma-auto"
-      v-if="itemData.image"
+      v-if="newImage"
     >
       <v-img
         aspect-ratio="16/9"
         :max-width="900"
         width="fill-content"
-        :alt="itemData.image.title || 'нет названия'"
+        :alt="newImage.title || 'нет названия'"
         cover
-        :src="itemData.image.image"
-        :lazy-src="itemData.image.thumbnail"
+        :src="newImage.image"
+        :lazy-src="newImage.thumbnail"
       ></v-img>
-    </v-sheet> -->
+    </v-sheet>
   </v-sheet>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import type { SubmitEventPromise } from 'vuetify'
-
+import { useImagesStore } from '@/stores'
+import { mapStores } from 'pinia'
 export default defineComponent({
   setup() {
     return {}
   },
   props: [],
-  emits: [],
+  emits: ['submit-form-image'],
   data() {
     return {
-      loading: false,
+      isValid: false,
       formInputs: {
-        file: undefined,
-        title: ''
-      },
+        image: undefined,
+        title: undefined
+      } as Record<string, any>,
       rules: {
         length: (len: number) => (v: string) =>
           (v || '').length >= len ||
           `Invalid character length, required ${len}`,
         required: (v: boolean) => !!v || 'This field is required',
-        photo: [
-          (value: any) => {
-            return (
-              !value ||
-              !value.length ||
-              value[0].size < 2000000 ||
-              'Avatar size should be less than 2 MB!'
-            )
-          }
-        ]
+        photo: (value: any) => {
+          return (
+            !value ||
+            !value.length ||
+            value[0].size < 2000000 ||
+            'Avatar size should be less than 2 MB!'
+          )
+        }
       }
     }
   },
+
   methods: {
-    async submit(event: SubmitEventPromise) {
-      this.loading = true
+    ressetForm() {
+      this.formInputs = {
+        image: undefined,
+        title: ''
+      }
+      if (!this.newImage) {
+        ;(this.$refs.inputTitle as HTMLFormElement).reset()
+        ;(this.$refs.inputTitle as HTMLFormElement).resetValidation()
+      }
+    },
 
-      const results = await event
+    async cleanFormAndImage() {
+      const { id } = this.newImage
+      this.ressetForm()
+      if (id) {
+        await this.imagesStore.fetchDeleteImage(id)
+      }
+    },
 
-      this.loading = false
+    async submit() {
+      let formData = new FormData()
 
-      alert(JSON.stringify(results, null, 2))
+      Object.keys(this.formInputs).map((key) => {
+        formData.append(key, this.formInputs[key])
+      })
 
-      // console.log(this.photo)
+      await this.imagesStore.fetchAddImage(formData)
+      // this.newImage = this.imagesStore.newImage
+      console.log(this.newImage)
+      this.ressetForm
+      this.$emit('submit-form-image', this.newImage)
+    }
+  },
+  computed: {
+    // получаем доступ к стору
+    ...mapStores(useImagesStore),
+    isLoading() {
+      return this.imagesStore.isLoading
+    },
+    newImage() {
+      return this.imagesStore.newImage
+    },
 
-      // let formData = new FormData()
-      // formData.append('file', this.photo)
-      // formData.append('title', this.photoName)
-      // console.log(formData)
-      // axios
-      //   .post('/single-file', formData, {
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data'
-      //     }
-      //   })
-      //   .then(function () {
-      //     console.log('SUCCESS!!')
-      //   })
-      //   .catch(function () {
-      //     console.log('FAILURE!!')
-      //   })
+    disabledВownload() {
+      return this.newImage.id ? true : !this.isValid
     }
   }
 })

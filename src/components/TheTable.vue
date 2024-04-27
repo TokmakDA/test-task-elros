@@ -89,7 +89,7 @@ export default {
       sortBy: [] as { key: string; order?: boolean | 'asc' | 'desc' }[],
       loading: true,
       totalItems: 0,
-      deleteItemId: 0,
+      deleteItemId: 0 as string | number,
       itemsPerPageOptions: [
         { value: 1, title: '1' },
         { value: 5, title: '5' },

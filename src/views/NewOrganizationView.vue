@@ -19,7 +19,7 @@
         >
           <v-text-field
             v-model="itemData.name"
-            :rules="[rules.length(3)]"
+            :rules="[rules.length(3), rules.required]"
             maxLength="100"
             color="deep-purple"
             counter="100"
@@ -49,6 +49,35 @@
             variant="filled"
             auto-grow
           ></v-textarea>
+
+          <v-input
+            v-if="addInputPhoto"
+            v-model="photoInput"
+            success
+            :rules="[rules.required]"
+            append-icon="mdi-close"
+            @click:append="cancelAddingPhoto"
+          >
+            Добавление изображения
+          </v-input>
+          <v-sheet>
+            <v-btn
+              v-if="!addInputPhoto"
+              color="green"
+              variant="tonal"
+              type="button"
+              @click="addInputPhoto = !addInputPhoto"
+              >Добавить фото?</v-btn
+            >
+          </v-sheet>
+
+          <!--  Форма добавления фото  -->
+          <the-form-image
+            v-if="addInputPhoto"
+            ref="childComponent"
+            @submit-form-image="addPhoto"
+          ></the-form-image>
+
           <v-sheet>
             <v-divider class="py-4"></v-divider>
             <v-sheet class="d-flex ga-4 justify-end">
@@ -78,17 +107,27 @@
 </template>
 
 <script lang="ts">
+import type { Image } from '@/@types/images'
+import TheFormImage from '@/components/TheFormImage.vue'
 import { useOrganizationStore } from '@/stores/organization'
 import { mapStores } from 'pinia'
 
 export default {
   data() {
     return {
+      photoInput: null as Image | null,
+      addInputPhoto: false,
       itemData: {
         name: '',
         short_name: '',
         description: ''
+      } as {
+        name: string
+        short_name: string
+        description: string
+        image?: string | number
       },
+
       isValid: false,
       isLoading: false,
       rules: {
@@ -101,12 +140,33 @@ export default {
   },
   methods: {
     async submit() {
+      if (this.photoInput) {
+        this.itemData = { ...this.itemData, image: this.photoInput.id }
+      }
       await this.organizationStore.fetchNewItem(this.itemData)
+    },
+
+    cancelAddingPhoto() {
+      const childComponent = this.$refs.childComponent as {
+        cleanFormAndImage: () => void
+      }
+      childComponent.cleanFormAndImage()
+
+      this.photoInput = null
+      this.addInputPhoto = false
+    },
+
+    addPhoto(item: Image) {
+      console.log(item)
+      this.photoInput = item
     }
   },
   computed: {
     // получаем доступ к стору
     ...mapStores(useOrganizationStore)
+  },
+  components: {
+    TheFormImage
   }
 }
 </script>
