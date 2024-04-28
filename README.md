@@ -1,39 +1,88 @@
-# test-task-elros
+# Тестовое задание ЭлРос
 
-This template should help get you started developing with Vue 3 in Vite.
+Тестовое задание для Front-end разработчика
 
-## Recommended IDE Setup
+## Проект задеплоен на Firebase
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+**[Ссылка на деплой](https://test-task-elros.web.app)**
 
-## Type Support for `.vue` Imports in TS
+## Описание
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+Проект представляет собой веб-приложение для управления организациями. Включает страницу с таблицей организаций, страницу добавления новой организации и страницу просмотра/редактирования информации об организации.
 
-## Customize configuration
+## Особенности
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+- Сортировка и пагинация таблицы организаций.
+- Добавление, редактирование и удаление организаций.
+- Загрузка фотографий организации с возможностью замены или - удаления.
+- Использование технологий `Vue.js`, `Vuetify`, `Vue Router`, `Pinia`, `Axios`, `Vite`.
 
-## Project Setup
+1. **Страница с таблицей организаций:**
 
-```sh
-npm install
-```
+- Сортировака
+- Кнопки Добавления, Редактирования и Удаления организации
 
-### Compile and Hot-Reload for Development
+2. **Страница добавления**
 
-```sh
-npm run dev
-```
+- Добавление организации
+  - Поля ввода
+  - Загрузка фото
+    - промотор добаляемого фото
+    - отмена загрузки удаляет уже загруженное фото с сервера
+- При успешном добалении перенаправляется на страницу организации
+- Кнопка в Назад в шапке
 
-### Type-Check, Compile and Minify for Production
+3. **Страница Огранизации**
 
-```sh
-npm run build
-```
+- Форма для чтения
+  - Поля ввода
+    - Загрузка фото
+      - Замена
+      - Добавление (если фото не добавлялось ранее)
+      - Промотор добаляемого фото
+      - отмена загрузки удаляет уже загруженное фото с сервера
+- Просмотр Имеющегося фото
+- Кнопка редактирования
+- Кнопки согхранения и отмены
+- Кнопка в Назад в шапке
 
-### Lint with [ESLint](https://eslint.org/)
+4. **_BASE_URL_** хранится в фойле `.env`
 
-```sh
-npm run lint
-```
+## Баги
+
+- Имеется баг пагинации таблицы _(при переходе, обновлении, или вводе в адресную строку вручную)_
+  <details><summary>
+  **_Возможное решение _(не реализовано)_**
+  </summary>
+
+      Применить виртуальную таблицу `VDataTableVirtual`, для управления пагинацией добавить отдельный компонент формы `VForm` для управления, стейты хранить в `Pinia`
+
+</details>
+
+## Разработка
+
+### Стек технологий
+
+- [`Vue-3`](https://ru.vuejs.org/) - Прогрессивный JavaScript-фреймворк для создания пользовательских интерфейсов.
+- [`Vuetyfy`](https://vuetifyjs.com/en/) - Библтиотека компонентов Vue.js, предоставляющая готовые компоненты и инструменты для создания красивых и функциональных веб-приложений.
+- [`Vue Router`](https://router.vuejs.org/) - Официальная библиотека маршрутизации для Vue.js.
+- [`Pinia`](https://pinia.vuejs.org/)
+- [`Axios`](https://axios-http.com/) - Библиотека для выполнения HTTP-запросов из браузера или Node.js.
+- [`Vite`](https://vitejs.dev/) - Быстрый инструмент сборки для разработки веб-приложений.
+
+### Инструменты
+
+- [`TypeScript`](https://www.typescriptlang.org/) - статическая типизация для JavaScript
+- [`ESLint`](https://eslint.org/) - Инструмент статического анализа кода для обнаружения ошибок.
+- [`Prettier`](https://prettier.io/) - Инструмент для форматирования кода
+- [`Sass`](https://sass-lang.com/) - Препроцессор CSS
+- [`Firebase`](https://firebase.google.com/) - это платформа разработки мобильных и веб-приложений от Google, предоставляющая различные инструменты и сервисы для создания и развития приложений.
+
+### Команды управления проектом
+
+- `npm install` - Установка зависимостей
+- `npm run dev` - запуск проекта для разработки
+- `npm run build` - Проверка типизации, компиляция и минификация и сборка для продакшена
+- `npm run lint` - Проверка кода на соответствие стандартам с помощью ESLint.
+- `format` - Форматирование кода с помощью Prettier.
+- `type-check` - Проверка типов с помощью TypeScript без генерации файлов выходного кода.
